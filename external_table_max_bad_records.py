@@ -10,11 +10,11 @@ from google.cloud import bigquery
 
     Passe o caminho de sua chave json como parâmetro para o método from_service_account_json
 """
-client = bigquery.Client.from_service_account_json("/home/asus/Documentos/ADS/2020/venv_bq_py3.7/venv/key_service_account_create_1.json")
+client = bigquery.Client.from_service_account_json("your_keys_path.json")
 
 """
     Instanciar um objeto ExternalConfig do tipo CSV.
-    Por default, os objetos ExternalConfig são CSV.
+    Por default os objetos ExternalConfig são CSV.
     
     Seguindo o mandamentos do Zen Python:
       Explícito é melhor que implícito.
@@ -26,9 +26,10 @@ table_ext_clear = bigquery.external_config.ExternalConfig("CSV")
     Porém é comum se deparar com arquivos com extensão .csv com outros tipos de delimitadores.
     Em especial, arquivos exportados do Excel para csv são automaticamente atribuídos ponto e virgula
     como o tipo de delimitador. 
-    Caso não for configurado outro tipo específico pelo usuário, virgula será atribuído por defaut.
+    Caso não for configurado outro tipo específico pelo usuário, virgula será atribuído por defaut para 
+    o método field_delimiter.
 """
-#setar o atributo field_delimiter do arquivo externo
+#setar o atributo field_delimiter com o delimitador do arquivo externo
 table_ext_clear.options.field_delimiter = ";"
 
 """
@@ -40,7 +41,7 @@ table_ext_clear.options.field_delimiter = ";"
 """
 
 #setar um valor baixo de preferência. 
-#table_ext_clear.max_bad_records = 10
+table_ext_clear.max_bad_records = 10
 
 """
     No nosso exemplo, por questões didáticas, estamos utilizando o Google Drive.
@@ -49,25 +50,28 @@ table_ext_clear.options.field_delimiter = ";"
 """
 
 #setar a uri onde seus dados estão armazenados.
-table_ext_clear.source_uris = "https://drive.google.com/open?id=1qBntr4-o7G3nY4_OomLoNdA7EUrV00nG"
+table_ext_clear.source_uris = "your_uri"
 
 """
-     Existem diferentes maneiras de expecificar um schema.
+     Existem diferentes maneiras de especificar um schema.
      No nosso exemplo utilizados o schema da nossa primeira tabela que apresentou problemas
      em certas linhas.
 """
 
-tb_ext_origem = client.get_table("dataset1-261923.set1.tb_ext_5")
+tb_ext_origem = client.get_table("project.dataset.table_ext_origem")
 
 schema = tb_ext_origem.schema
 
 table_ext_clear.schema = schema
 
 #criar o id de destino da sua tabela. Composto por: nome_projeto.nome_dataset.nome_tabela
-table_id = "dataset1-261923.set1.table_ext_origem"
+table_id = "project.dataset.table_ext_clear"
 
 #instanciar um objeto do tipo Table, inicializado com o id da tabela de destino.
 table = bigquery.Table(table_id)
+
+#delete de teste
+#client.delete_table(table)
 
 #setar o atributo external_data_configuration com o objeto ExternalConfig criado na linha 23.
 table.external_data_configuration = table_ext_clear
