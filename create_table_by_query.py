@@ -1,22 +1,19 @@
 from google.cloud import bigquery
 
 #Construa/instancie um objeto cliente do BigQuery
-client = bigquery.Client.from_service_account_json("/home/asus/Documentos/ADS/2020/venv_bq_py3.7/venv/key_service_account_create_1.json")
+client = bigquery.Client.from_service_account_json("your_keys_path.json")
 
-#cri um id para sua tabela destino no formato nome_projeto.nome_dataset.nome_tabela
-table_id = "dataset1-261923.set1.table_inter_transformed"
+#crie um id para sua tabela destino no formato nome_projeto.nome_dataset.nome_tabela
+table_id = "project.dataset.table_inter_transformed"
 
-#criar um job_config e set o argumento destination com o id criado anteriormente
+#criar um job_config e setar o argumento destination com o id criado anteriormente
 job_config = bigquery.QueryJobConfig(destination=table_id)
-
-#reescrever tabela
-#https://googleapis.dev/python/bigquery/latest/generated/google.cloud.bigquery.job.QueryJobConfig.html#google.cloud.bigquery.job.QueryJobConfig.write_disposition
 
 #setar atributo write_disposition para permitir replace na tabela.
 job_config.write_disposition="WRITE_TRUNCATE"
 
 
-#Função responsável por pela limpeza nas descrições das moedas
+#Função responsável pela limpeza nas descrições
 udf = """create temp function replace_latin_1(entrada string) AS 
 (regexp_replace(
 	regexp_replace(
@@ -49,9 +46,9 @@ r"[×]","X")
 );
 """
 """
-    Nessa query utilizamos função de CTE - Comum Tamble  Expressions.
+    Nessa query empregamos CTE - Comum Tamble  Expressions.
     Eu particularmente gosto de utilizá-las, facilidando futura
-    reutilização do código, alterações melhorando a leitura do código.
+    reutilização do código, alterações e melhorando a leitura.
 """
 query = """
     WITH table_local_source_transformed AS (
@@ -65,19 +62,19 @@ query = """
 	replace_latin_1(UPPER(descricao)) AS DESC_MOEDA_CEDULA,
 	SAFE_CAST(valor AS NUMERIC) MOEDA_CEDULA, 
 	SAFE_CAST(REPLACE(REPLACE(quantidade,".", ""),",",".") AS NUMERIC) QTD_CIRCULACAO
-	FROM `dataset1-261923.set1.table_local_source`)
+	FROM `project.dataset.table_local_source`)
 
     SELECT * FROM table_local_source_transformed
 """
 
 """
-    Por fim é ncessário concatenar as partes e formar única query final.
+    Por fim é ncessário concatenar as partes e formar uma única query final.
 """
 query_final = udf + query
 
 
 """
-Aplique o metodo .query passando com parâmetro a query_final e setando o o argumento
+Aplique o metodo .query passando como parâmetro a 'query_final' e setando o argumento
 job_config com o objeto job_config criado anteriormente.
 """
 
